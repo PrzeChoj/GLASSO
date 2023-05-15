@@ -26,8 +26,20 @@ off_diagonal_part(K)
 frob_norm(solve(K), data2_true_cov) # 10, czyli duzo mniej niz 64
 
 
-gout <- glasso::glasso(cov(data2), 0.03)
+gout <- glasso::glasso(cov(data2), lambda)
 frob_norm(gout$w, data2_true_cov) # 51, czyli troche mniej niz 64
+
+
+
+
+set.seed(1234)
+lambda <- 0.03
+
+data1_cov <- cov(data1)
+#K <- z_papiera_GLASSO(data1_cov, lambda, verbose = TRUE) # niestety baaaaardzo dlugo sie liczy... :<
+
+gout <- glasso::glasso(data1_cov, lambda)
+
 
 
 
