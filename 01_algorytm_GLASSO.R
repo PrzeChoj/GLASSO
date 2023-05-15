@@ -18,23 +18,23 @@ my_GLASSO <- function(my_cov, lambda){
   
   p <- ncol(my_cov) # wymiar macierzy
   
-  sigma_matrix <- my_cov + lambda * diag(nrow = p) # macierz precyzji
+  sigma_matrix <- my_cov + diag(lambda, nrow = p) # macierz precyzji
   # Diagonal are already ok
   B <- matrix(numeric(p*p), ncol = p) # macierz zer
   
-  counter <- 0
+  continue_outer <- TRUE
   v <- p
-  while (counter <= 2*p){ # this will stop if no changes were made to sigma_matrix
+  while (continue_outer){ # this will stop if no changes were made to sigma_matrix
+    continue_outer <- FALSE # this will be changed to TRUE if anything will change in B or sigma
     v <- ifelse(v == p, 1, v + 1)
     
     continue_inner <- TRUE
     u <- p
-    counter_changes_B <- 1
+    counter_changes_B <- -1 # will be changed in the 1st run of the while
     
     while (continue_inner){
       if (u == p){
         if(counter_changes_B == 0){
-          counter <- counter + 1
           continue_inner <- FALSE # zbieglismy juz
           next
         }
@@ -53,9 +53,9 @@ my_GLASSO <- function(my_cov, lambda){
       my_sum <- sum(sigma_matrix[u,-v] * B[-v,v])
       B[u,v] <- T_function(my_cov[u,v] - my_sum, lambda)/sigma_matrix[v,v]
       
-      if(abs(old_B_u_v - B[u,v]) > 0.000001){
+      if(abs(old_B_u_v - B[u,v]) > 0.001){
         counter_changes_B <- counter_changes_B + 1
-        counter <- 0
+        continue_outer <- TRUE
       }
     }
     
@@ -81,7 +81,7 @@ my_GLASSO <- function(my_cov, lambda){
       old_sigma_u_v <- sigma_matrix[u,v]
       sigma_matrix[u,v] <- sum(sigma_matrix[u,-v] * B[-v,v])
       
-      if(abs(old_sigma_u_v - sigma_matrix[u,v]) > 0.000001){
+      if(abs(old_sigma_u_v - sigma_matrix[u,v]) > 0.001){
         counter_changes_sigma <- counter_changes_sigma + 1
         continue_outer <- TRUE
       }
