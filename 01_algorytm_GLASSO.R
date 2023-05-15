@@ -9,29 +9,32 @@ is.positive.semi.definite.matrix <- function(matrix_of_interest, tolerance = 1e-
 }
 
 T_function <- function(x, lambda){
-  # TODO()
+  return(sign(x)*max(abs(x)-lambda,0))
 }
 
 my_GLASSO <- function(my_cov, lambda){
   stopifnot(lambda > 0)
   stopifnot(is.positive.semi.definite.matrix(my_cov))
   
-  p <- ncol(my_cov)
+  p <- ncol(my_cov) # wymiar macierzy
   
-  sigma_matrix <- my_cov + lambda * diag(nrow = p)
+  sigma_matrix <- my_cov + lambda * diag(nrow = p) # macierz precyzji
   # Diagonal are already ok
-  B <- matrix(numeric(p*p), ncol = p)
+  B <- matrix(numeric(p*p), ncol = p) # macierz zer
   
-  continue_outer <- TRUE
+  counter <- 0
   v <- p
-  while (continue_outer){ # this will stop if no changes were made to sigma_matrix
+  while (counter <= 2*p){ # this will stop if no changes were made to sigma_matrix
     v <- ifelse(v == p, 1, v + 1)
     
     continue_inner <- TRUE
     u <- p
+    counter_changes_B <- 1
+    
     while (continue_inner){
       if (u == p){
         if(counter_changes_B == 0){
+          counter <- counter + 1
           continue_inner <- FALSE # zbieglismy juz
           next
         }
@@ -52,14 +55,15 @@ my_GLASSO <- function(my_cov, lambda){
       
       if(abs(old_B_u_v - B[u,v]) > 0.000001){
         counter_changes_B <- counter_changes_B + 1
+        counter <- 0
       }
     }
     
     continue_inner <- TRUE
+    counter_changes_sigma <- 1
     while (continue_inner){
-      continue_outer <- FALSE
       if (u == p){
-        if(counter_changes_B == 0){
+        if(counter_changes_sigma == 0){
           continue_inner <- FALSE # zbieglismy juz
           next
         }
@@ -84,7 +88,8 @@ my_GLASSO <- function(my_cov, lambda){
     }
   }
   
-  my_K <- matrix(numeric(p*p), nrow=p)
+  # Teraz budujemy macierz K.
+  my_K <- matrix(numeric(p*p), nrow=p) #inicjalizujemy
   
   for (v in 1:p) {
     my_K[v,v] <- 1/(sigma_matrix[v,v] - sum(sigma_matrix[v,-v] * B[-v,v]))
@@ -103,15 +108,5 @@ my_GLASSO <- function(my_cov, lambda){
   
   my_K
 }
-
-p <- 10
-lambda <- 1
-my_cov <- matrix(rnorm(p*p), ncol=p)
-my_cov <- my_cov %*% t(my_cov)
-
-
-
-
-
 
 
