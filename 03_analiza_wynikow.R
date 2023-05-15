@@ -5,7 +5,7 @@ data1
 
 # Generate data2:
 set.seed(1234)
-p <- 50 # 500 --->>> 25 seconds; 1000 --->>> 170 seconds
+p <- 50
 n <- floor(p*4/5)
 data2 <- get_data2(n, p, plot_points = TRUE)
 
@@ -19,8 +19,7 @@ frob_norm(cov(data2), data2_true_cov) # 64
 
 set.seed(1234)
 lambda <- 0.03
-# install.packages("icecream")
-K <- z_papiera_GLASSO(cov(data2), lambda, verbose = TRUE) # verbose = TRUE wymaga pakietu icecream
+K <- z_papiera_GLASSO(cov(data2), lambda, verbose = TRUE)
 off_diagonal_part(K)
 
 frob_norm(solve(K), data2_true_cov) # 10, czyli duzo mniej niz 64
