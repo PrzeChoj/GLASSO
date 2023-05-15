@@ -12,6 +12,7 @@ T_function <- function(x, lambda){
   return(sign(x)*max(abs(x)-lambda,0))
 }
 
+# Ponizej to implementacja z zajec. Niestety algorytm rozbiega
 z_zajec_GLASSO <- function(my_cov, lambda, maxiter = 100){
   stopifnot(lambda > 0)
   stopifnot(is.positive.semi.definite.matrix(my_cov))
@@ -130,16 +131,19 @@ z_zajec_GLASSO <- function(my_cov, lambda, maxiter = 100){
   my_K
 }
 
-z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100){
+# Ponizej to implementacja z papiera z uzyciem wbudowanej LASSO solver. Algorytm dziala zgodnie z oczekiwaniami
+z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001){
   stopifnot(lambda > 0)
   stopifnot(is.positive.semi.definite.matrix(my_cov))
+  
+  stop_treshold <- t * mean(my_cov[row(my_cov) != col(my_cov)])
+  
   
   p <- ncol(my_cov) # wymiar macierzy
   
   sigma_matrix <- my_cov + diag(lambda, nrow = p) # macierz precyzji
   # Diagonal are already ok
   B <- matrix(numeric(p*p), ncol = p) # macierz zer
-  
   
   
   
@@ -154,6 +158,7 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100){
              error = function(e) {browser()}) # sometimes this surprisingly happened
     y <- Matrix::solve(x, my_cov[-v,v])
     
+    # Rozwiaz LASSO i odczytaj wynik
     coefs <- unclass(coef(glmnet(x, y, lambda = lambda, intercept = FALSE)))
     my_beta <- numeric(p-1)
     for (i in 1:(p-1)) {
@@ -162,36 +167,28 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100){
       }
     }
     
-    B[v, -v] <- my_beta
+    B[-v, v] <- my_beta # rozwiazania trzymam w kolumnie
     
     sigma_matrix[-v,v] <- sigma_matrix[-v,-v] %*% my_beta
     sigma_matrix[v,-v] <- t(sigma_matrix[-v,v])
     
     if(v == p){
       num_iter <- num_iter + 1
-      if(sum(abs(old_sigma_matrix - sigma_matrix)) < 0.001){
+      if(sum(abs(old_sigma_matrix - sigma_matrix)) < stop_treshold){ # kryt stopu zgodne z papierem
         stop_crit <- TRUE
       }
       old_sigma_matrix <- sigma_matrix
     }
   }
   
+  
   # Teraz budujemy macierz K.
-  my_K <- matrix(numeric(p*p), nrow=p) #inicjalizujemy
+  my_K <- matrix(numeric(p*p), nrow=p) # inicjalizujemy
   
   for (v in 1:p) {
-    my_K[v,v] <- 1/(sigma_matrix[v,v] - sum(sigma_matrix[v,-v] * B[-v,v]))
-  }
-  
-  for (v in 1:p) {
-    for (u in 1:p) {
-      if (u == v){
-        next
-      }
-      else{
-        my_K[u,v] <- -B[u,v] * my_K[v,v]
-      }
-    }
+    my_K[v,v] <- 1/(sigma_matrix[v,v] - sum(sigma_matrix[v,] * B[,v])) # B[v,v] == 0
+    my_K[-v,v] <- -B[-v,v] * my_K[v,v]
+    my_K[v,-v] <- my_K[-v,v] # na podstawie https://github.com/MGallow/GLASSOO/blob/master/src/glasso.cpp, komentarz w linii 141
   }
   
   my_K
