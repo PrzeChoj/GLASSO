@@ -1,5 +1,12 @@
 source("./01_algorytm_GLASSO.R")
-#source("./02_wczytanie_danych.R")
+source("./02_wczytanie_danych.R")
+
+data1
+# Generate graph:
+p <- 40 # 500 --->>> 25 seconds; 1000 --->>> 170 seconds
+data2 <- get_data2(p, plot_points = TRUE)
+
+
 
 set.seed(234567)
 p <- 5

@@ -4,9 +4,8 @@ if (!require("huge", quietly = TRUE)) {
 }
 library(huge)
 data(stockdata)
-x <- log(stockdata$data[2:1258, ] / stockdata$data[1:1257, ])
-colnames(x) <- stockdata$info[, 1]
-x
+data1 <- log(stockdata$data[2:1258, ] / stockdata$data[1:1257, ])
+colnames(data1) <- stockdata$info[, 1]
 
 
 
@@ -17,16 +16,11 @@ if (!require("visNetwork", quietly = TRUE)) {
 }
 library(visNetwork)
 
-
-
-
-# Generate graph:
-p <- 400 # 500 --->>> 25 seconds; 1000 --->>> 170 seconds
-nodes <- data.frame(id = 1:p)
-
-get_edges <- function(p){
+get_edges <- function(p, plot_points = TRUE){
   cordinates <- data.frame(matrix(runif(p*2), ncol = 2))
-  plot(cordinates, type="p", pch=20)
+  if(plot_points){
+    plot(cordinates, type="p", pch=20)
+  }
   
   from <- numeric(0)
   to <- numeric(0)
@@ -49,26 +43,37 @@ get_edges <- function(p){
         from <- c(from, i)
         to <- c(to, j)
         
-        lines(c(cordinates[i,1], cordinates[j,1]), c(cordinates[i,2], cordinates[j,2]))
+        if(plot_points){
+          lines(c(cordinates[i,1], cordinates[j,1]), c(cordinates[i,2], cordinates[j,2]))
+        }
       }
     }
   }
   close(progressBar)
   
-  edges <- data.frame(from = from, to = to)
-  
-  edges
+  data.frame(from = from, to = to)
 }
 
-edges <- get_edges(p)
+macierz_kowariancji <- function(edges_list, p) {
+  M <- matrix(0, nrow = p, ncol = p)
+  diag(M) <- rep(1, p)
+  edges <- t(edges_list)
+  n_edges <- length(edges) / 2
+  
+  for (i in 1:n_edges) {
+    M[edges[1, i], edges[2, i]] <- 0.245
+    M[edges[2, i], edges[1, i]] <- 0.245
+  }
+  
+  cov2cor(solve(M))
+}
 
-# TODO(Pomyslec nad tym:)
-# Nie jestem tego pewny z 2 powodow:
-# 1. Napisałem *sqrt(p), bo tak mi pasowało, ale w PDF-ie było /sqrt(p)
-# 2. Pisali, że robili jakies usuwanie, zeby byly 4 krawedzie, a ja po prostu
-    # nie generowalem nastepnych, bo to by bylo bardzo czasochlonne.
 
-
-
+get_data2 <- function(p, plot_points = TRUE){
+  nodes <- data.frame(id = 1:p)
+  edges <- get_edges(p, plot_points = plot_points)
+  
+  macierz_kowariancji(edges, p)
+}
 
 
