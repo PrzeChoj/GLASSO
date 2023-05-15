@@ -1,3 +1,5 @@
+library(glmnet)
+
 is.positive.semi.definite.matrix <- function(matrix_of_interest, tolerance = 1e-06) {
   eigenvalues <- eigen(
     matrix_of_interest,
@@ -132,11 +134,11 @@ z_zajec_GLASSO <- function(my_cov, lambda, maxiter = 100){
 }
 
 # Ponizej to implementacja z papiera z uzyciem wbudowanej LASSO solver. Algorytm dziala zgodnie z oczekiwaniami
-z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001){
+z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001, verbose = FALSE){
   stopifnot(lambda > 0)
   stopifnot(is.positive.semi.definite.matrix(my_cov))
   
-  stop_treshold <- t * mean(my_cov[row(my_cov) != col(my_cov)])
+  stop_treshold <- t * mean(abs(my_cov[row(my_cov) != col(my_cov)]))
   
   
   p <- ncol(my_cov) # wymiar macierzy
@@ -151,7 +153,7 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001){
   old_sigma_matrix <- sigma_matrix
   stop_crit <- FALSE
   num_iter <- 0
-  while(!stop_crit && num_iter < maxiter){
+  while(!stop_crit && (num_iter < maxiter)){
     v <- ifelse(v == p, 1, v + 1)
     
     tryCatch(x <- expm::sqrtm(sigma_matrix[-v,-v]),
@@ -174,7 +176,12 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001){
     
     if(v == p){
       num_iter <- num_iter + 1
-      if(sum(abs(old_sigma_matrix - sigma_matrix)) < stop_treshold){ # kryt stopu zgodne z papierem
+      
+      diff_sigma <- sum(abs(old_sigma_matrix - sigma_matrix))
+      if(verbose){
+        icecream::ic(diff_sigma)
+      }
+      if(diff_sigma < stop_treshold){ # kryt stopu zgodne z papierem
         stop_crit <- TRUE
       }
       old_sigma_matrix <- sigma_matrix

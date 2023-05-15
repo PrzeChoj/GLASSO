@@ -69,11 +69,18 @@ macierz_kowariancji <- function(edges_list, p) {
 }
 
 
-get_data2 <- function(p, plot_points = TRUE){
+get_data2 <- function(n, p, plot_points = TRUE){
   nodes <- data.frame(id = 1:p)
   edges <- get_edges(p, plot_points = plot_points)
   
-  macierz_kowariancji(edges, p)
+  sigma_matrix <- macierz_kowariancji(edges, p)
+  
+  MASS::mvrnorm(n, mu = numeric(p), Sigma = sigma_matrix)
 }
+
+
+
+
+
 
 
