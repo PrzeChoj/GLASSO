@@ -202,3 +202,12 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001, verbose =
 }
 
 
+
+off_diagonal_part <- function(my_matrix){
+  (sum(abs(my_matrix) > 0.0001) - p) / (p * (p-1))
+}
+
+frob_norm <- function(matrix1, matrix2){
+  diff_matrix <- matrix1 - matrix2
+  sum(diff_matrix * diff_matrix)
+}

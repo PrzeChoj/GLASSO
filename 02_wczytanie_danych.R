@@ -75,7 +75,8 @@ get_data2 <- function(n, p, plot_points = TRUE){
   
   sigma_matrix <- macierz_kowariancji(edges, p)
   
-  MASS::mvrnorm(n, mu = numeric(p), Sigma = sigma_matrix)
+  list(MASS::mvrnorm(n, mu = numeric(p), Sigma = sigma_matrix),
+       sigma_matrix)
 }
 
 
