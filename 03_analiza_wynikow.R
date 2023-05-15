@@ -25,3 +25,9 @@ off_diagonal_part(K)
 
 frob_norm(solve(K), data2_true_cov) # 10, czyli duzo mniej niz 64
 
+
+gout <- glasso::glasso(cov(data2), 0.03)
+frob_norm(gout$w, data2_true_cov) # 51, czyli troche mniej niz 64
+
+
+
