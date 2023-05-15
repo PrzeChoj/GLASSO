@@ -165,7 +165,7 @@ z_papiera_GLASSO <- function(my_cov, lambda, maxiter = 100, t = 0.001, verbose =
       
       diff_sigma <- sum(abs(old_sigma_matrix - sigma_matrix))
       if(verbose){
-        icecream::ic(diff_sigma)
+        print(paste0("Roznica w sigmie w ostatniej iteracji: ", diff_sigma))
       }
       if(diff_sigma < stop_treshold){ # kryt stopu zgodne z papierem
         stop_crit <- TRUE
